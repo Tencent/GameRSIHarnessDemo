@@ -1,0 +1,12 @@
+{
+  "name": "gamepilot-research-supplement",
+  "version": "1.0.0",
+  "license": "MIT",
+  "private": true,
+  "description": "Local reconstruction of the GamePilot public research supplement",
+  "scripts": {
+    "start": "node scripts/serve.mjs",
+    "dev": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs"
+  }
+}

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=9961379d-573b-48fc-9190-ef7930a644fb
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="GamePilot: a game agent that learns how to observe and act from its own play. Explore the method, gameplay demos, benchmark tasks, and research results.">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f6f7f9">
+  <title>GamePilot: A Game Agent That Learns How to Observe and Act from Its Own Play</title>
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="walkthrough-data.js" defer></script>
+  <script type="module" src="walkthrough.js"></script>
+  <script src="revision-data.js" defer></script>
+  <script type="module" src="revision-story.js"></script>
+  <script src="benchmark-data.js" defer></script>
+  <script type="module" src="benchmark-viewer.js"></script>
+  <script src="page-layout.js" defer></script>
+  <script src="hero.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#abstract">Skip to content</a>
+<div class="site-nav">
+  <nav class="site-nav-inner" aria-label="Primary navigation">
+    <a class="wordmark" href="#top">GamePilot<span aria-hidden="true">.</span></a>
+    <div class="nav-sections"><a href="#abstract">Overview</a><a href="#method">Method</a><a href="#demos">Demos</a><a href="#benchmark">Benchmark</a><a href="#results">Results</a><a href="#citation">Cite</a></div>
+  </nav>
+</div>
+<header class="paper-header hero-header" id="top">
+  <div class="hero-backdrop" aria-hidden="true"><img class="hero-poster" src="assets/images/hero/game-world.webp" alt="" fetchpriority="high"><video id="hero-video" data-background-video data-src="assets/media/hero/game-world.mp4" muted loop playsinline preload="none" poster="assets/images/hero/game-world.webp" tabindex="-1" aria-hidden="true"></video></div>
+  <div class="hero-shade" aria-hidden="true"></div>
+  <div class="hero-content">
+    <p class="paper-eyebrow">GamePilot <span aria-hidden="true">/</span> Research Project</p>
+    <h1><span class="hero-wordmark">GamePilot<span class="title-dot">.</span></span></h1>
+    <p class="hero-subtitle">A Game Agent That Learns How to Observe<br class="desktop-break"> and Act from Its Own Play</p>
+    <nav class="resource-links" aria-label="Project resources"><a class="primary-link" href="#demos">Explore GamePilot <span aria-hidden="true">↘</span></a><a href="#benchmark">Explore benchmark <span aria-hidden="true">↗</span></a><a href="https://openreview.net/pdf?id=IRHuEpKDcZ" target="_blank" rel="noopener noreferrer" aria-label="Read the paper PDF (opens in a new tab)">Paper <span aria-hidden="true">↗</span></a></nav>
+    <p class="authors"><span><a href="https://www.yimingzheng.top/" target="_blank" rel="noopener noreferrer">Yiming Zheng</a><sup>1,2</sup></span>, <span><a href="https://github.com/Couen" target="_blank" rel="noopener noreferrer">Hanwen Gu</a><sup>3</sup></span>, <span><a href="https://scholar.google.com/citations?user=gMbAGbMAAAAJ&amp;hl=en" target="_blank" rel="noopener noreferrer">Junle Wang</a><sup>3</sup></span></p>
+    <ol class="affiliations" aria-label="Author affiliations">
+      <li><sup>1</sup> <a href="https://www.ucas.ac.cn/" target="_blank" rel="noopener noreferrer">University of the Chinese Academy of Sciences</a></li>
+      <li><sup>2</sup> <a href="https://www.siat.ac.cn/" target="_blank" rel="noopener noreferrer">Shenzhen Institutes of Advanced Technology</a></li>
+      <li><sup>3</sup> <a href="https://www.tencent.com/" target="_blank" rel="noopener noreferrer">Tencent</a></li>
+    </ol>
+  </div>
+  <a class="hero-scroll" href="#abstract"><span>Scroll to explore</span><span aria-hidden="true">↓</span></a>
+</header>
+<main>
+
+  <section class="section prose" id="abstract" aria-labelledby="abstract-title">
+    <p class="section-label">01 / Overview</p>
+    <h2 id="abstract-title">Abstract</h2>
+    <p>Human players progress through unfamiliar games by connecting individual actions and using earlier experience to decide what to do next. Existing game agents often simplify this process through access to game-state APIs, pauses during inference, or repeated task attempts. We study game playing in the wild, where agents interact with a continuously running game through its graphical user interface and learn from their own play to sustain progress. We propose GamePilot, which places a fixed-weight vision-language model inside an editable harness that controls what the model observes and how its decisions reach the game. A planner coordinates overall progress and delegates local objectives to subagents with shorter contexts for timely responses. The GamePilot Evolver uses execution records to guide harness revisions and admits candidates after offline replay tests while gameplay continues. It credits each executed version by its estimated advantage over the seed harness from the state it inherits. We introduce GamePilot Bench across four games, with Milestone campaigns measuring human-time-weighted gameplay progress and Atomic and Basic tasks assessing general interaction and game knowledge. In one-hour Milestone campaigns with Gemini 3.6 Flash, GamePilot reaches 1.85–2.00× the chapter progress of the strongest baseline. Revising the full harness yields 10.6–11.4 percentage points more progress than revising game knowledge alone. Across three backbones and four games, GamePilot&#x27;s final harnesses achieve the highest mean expert ratings in 10 of the 12 Atomic settings and all 12 Basic settings.</p>
+  </section>
+
+  <section class="section" id="method" aria-labelledby="method-title">
+    <div class="chapter-heading"><div><p class="section-label">02 / Approach</p>
+    <h2 id="method-title">Method</h2></div><p class="method-intro">GamePilot optimizes game progress per unit of play time under a fixed model. An active GamePilot Harness plays each window while the GamePilot Evolver processes earlier records in the background. The Evolver localizes failures, tests revisions through offline replay, and credits versions after they have played. At a window boundary, it selects from admitted versions using the feedback already available, and play continues from the current game state.</p></div>
+    <figure class="method-figure paper-method">
+      <button class="figure-button" id="expand-method" aria-label="Enlarge the GamePilot method figure"><img src="assets/images/method.png" width="3480" height="1890" alt="GamePilot overview from the paper. The editable harness connects game observations, a planner and subagents, and action controls. The Evolver localizes failures, revises the harness, admits candidates through replay tests, and selects versions using advantage-based credit." loading="lazy"></button>
+      <p class="figure-hint">Select the figure to enlarge.</p>
+      <figcaption><strong>GamePilot overview.</strong> (a) The GamePilot Harness in one gameplay window. Editable middleware (purple) selects frames, extracts the minimap, and converts intended actions into timed keyboard and mouse input, while a planner (System 2) delegates local objectives to subagents (System 1), both served by the fixed VLM. Blue arrows carry observations and pink arrows carry actions. (b) The GamePilot Evolver. Diagnoses of a window&#x27;s record localize a failure, the proposer edits the implicated components, replay tests decide admission, and estimated advantage guides version selection while gameplay continues.</figcaption>
+    </figure>
+  </section>
+
+  <section class="section agent-demos" id="demos" aria-labelledby="demos-title">
+    <div class="chapter-heading"><div><p class="section-label">03 / Demonstrations</p>
+    <h2 id="demos-title">GamePilot in Action</h2></div><p class="section-intro">Explore GamePilot’s recorded observations, action decisions, and harness revision process in Honor of Kings: World.</p></div>
+    <div class="action-section-tabs" role="tablist" aria-label="GamePilot demonstrations">
+      <button type="button" id="action-tab-decisions" data-action-panel="decisions" role="tab" aria-controls="action-panel-decisions" aria-selected="true">Agent decisions <span>4 examples</span></button>
+      <button type="button" id="action-tab-evolution" data-action-panel="evolution" role="tab" aria-controls="action-panel-evolution" aria-selected="false" tabindex="-1">Harness evolution <span>Recorded case</span></button>
+    </div>
+    <div class="action-section-panel" id="action-panel-decisions" role="tabpanel" aria-labelledby="action-tab-decisions" tabindex="0">
+    <div class="action-walkthrough" id="recorded-observations" aria-labelledby="walkthrough-title">
+      <div class="walkthrough-heading"><h3 id="walkthrough-title">Inside a recorded decision</h3><span>Interactive walkthrough</span></div>
+      <div class="walkthrough-cases" role="tablist" aria-label="Recorded GamePilot examples"><button type="button" role="tab" id="case-tab-0" aria-controls="walkthrough-example" aria-selected="true" tabindex="0" data-case="0">Scene &amp; minimap</button><button type="button" role="tab" id="case-tab-1" aria-controls="walkthrough-example" aria-selected="false" tabindex="-1" data-case="1">Camera comparison</button><button type="button" role="tab" id="case-tab-2" aria-controls="walkthrough-example" aria-selected="false" tabindex="-1" data-case="2">Combat delegation</button><button type="button" role="tab" id="case-tab-3" aria-controls="walkthrough-example" aria-selected="false" tabindex="-1" data-case="3">Direction geometry</button></div>
+      <div class="walkthrough-example" id="walkthrough-example" role="tabpanel" aria-labelledby="case-tab-0">
+        <div class="walkthrough-task"><div><span class="walkthrough-eyebrow">Recorded task</span><h3 id="walkthrough-task-title">Connect the scene to a direction cue.</h3><p id="walkthrough-task-text">Continue the visible trial objective using the game scene and its minimap.</p></div><div class="walkthrough-progress"><span id="walkthrough-count">View 1 of 2</span><progress id="walkthrough-progress" value="1" max="2" aria-label="Walkthrough view"></progress><p id="walkthrough-scope">Scene and detail from one recorded decision · step 18</p></div></div>
+        <div class="walkthrough-steps" role="tablist" aria-label="Views of the selected example" id="walkthrough-steps"></div>
+        <div class="walkthrough-body">
+          <div class="walkthrough-execution">
+            <div class="walkthrough-panel-heading"><h4>Observation &amp; action</h4><span id="walkthrough-step-label">Recorded step 18</span></div>
+            <div class="walkthrough-execution-inner" id="walkthrough-view" role="tabpanel" aria-labelledby="view-tab-0"><div class="walkthrough-card-title"><span id="walkthrough-view-number">01</span><div><span class="walkthrough-eyebrow" id="walkthrough-tag">Observation</span><h4 id="walkthrough-view-title">Read the scene</h4></div></div>
+              <figure><button class="demo-image-button walkthrough-image" id="walkthrough-image-button" data-demo-image="assets/images/demos/scene-detail.webp" data-demo-title="Read the scene · recorded step 18" aria-label="Enlarge the recorded observation"><img id="walkthrough-image" src="assets/images/demos/scene-detail.webp" width="935" height="960" alt="Scene crop from the current observation." loading="lazy"></button><figcaption id="walkthrough-image-caption">Scene crop from the current observation.</figcaption></figure>
+              <p id="walkthrough-summary">The game scene supplies the local visual context for the next action.</p>
+            </div>
+            <div class="walkthrough-controls"><button type="button" class="walkthrough-reset" id="walkthrough-reset">Restart</button><div><button type="button" id="walkthrough-prev" disabled aria-label="Previous view">←</button><button type="button" id="walkthrough-play" aria-pressed="false">Auto play</button><button type="button" class="walkthrough-next" id="walkthrough-next">Next view →</button></div></div>
+          </div>
+          <aside class="walkthrough-record" aria-labelledby="walkthrough-record-title"><div class="walkthrough-panel-heading"><h4 id="walkthrough-record-title">Decision record</h4><span>Recorded excerpts</span></div><div class="walkthrough-record-inner">
+            <div class="walkthrough-record-block"><h5><span>01</span> Observed cues</h5><p id="walkthrough-cue"></p></div>
+            <div class="walkthrough-record-block"><h5><span>02</span> Planned response</h5><ul id="walkthrough-plan"></ul></div>
+            <div class="walkthrough-record-block"><h5 id="walkthrough-action-heading"><span>03</span> Dispatched action</h5><pre id="walkthrough-action"></pre><p class="walkthrough-record-note" id="walkthrough-action-note"></p></div>
+            <div class="walkthrough-context"><span class="walkthrough-eyebrow">Reading this example</span><p id="walkthrough-context"></p></div>
+          </div></aside>
+        </div>
+      </div>
+      <p class="sr-only" id="walkthrough-announcement" aria-live="polite" aria-atomic="true"></p>
+      <noscript><p class="note">Enable JavaScript to switch examples and inspect their recorded actions. The first scene crop is shown above.</p></noscript>
+    </div>
+    </div>
+    <div class="action-section-panel" id="action-panel-evolution" role="tabpanel" aria-labelledby="action-tab-evolution" tabindex="0" hidden>
+    <section class="revision-story" id="harness-revision" aria-labelledby="revision-title">
+      <header class="revision-header">
+        <div><p class="revision-eyebrow">A recorded harness revision</p><h3 id="revision-title">Learning to follow the right marker.</h3><p>Trace one candidate from a navigation diagnosis to adoption in later gameplay.</p></div>
+        <div class="revision-version"><span class="revision-version-dot" aria-hidden="true"></span><span>seed <span aria-hidden="true">→</span> candidate 000001</span></div>
+      </header>
+      <nav class="revision-stages" aria-label="Harness revision stages">
+        <button type="button" data-revision-stage="0" aria-current="step" aria-controls="revision-content"><span class="revision-stage-number">01</span><span><b>Diagnose</b><small>Identify the mismatch</small></span><span class="revision-stage-time">23:20</span></button>
+        <button type="button" data-revision-stage="1" aria-controls="revision-content"><span class="revision-stage-number">02</span><span><b>Revise</b><small>Bind the observation</small></span><span class="revision-stage-time">37:09</span></button>
+        <button type="button" data-revision-stage="2" aria-controls="revision-content"><span class="revision-stage-number">03</span><span><b>Admit</b><small>Check the candidate</small></span><span class="revision-stage-time">40:51</span></button>
+        <button type="button" data-revision-stage="3" aria-controls="revision-content"><span class="revision-stage-number">04</span><span><b>Execute</b><small>Adopt at a boundary</small></span><span class="revision-stage-time">41:38</span></button>
+      </nav>
+      <div class="revision-content" id="revision-content" data-stage="0">
+        <div class="revision-visual">
+          <div class="revision-visual-heading"><span id="revision-visual-label">Recorded cues</span><span id="revision-event-time">23:20 into the run</span></div>
+          <div class="revision-scene" data-revision-scene="0">
+            <div class="revision-scene-caption">Two distinct signals in the same observation <span>Step 13</span></div>
+            <div class="revision-cues">
+              <div class="revision-cue revision-cue-target"><span class="revision-diamond" aria-hidden="true"></span><span>Local quest diamond</span><strong>62<span>m</span></strong><small>Nearby elevated objective</small></div>
+              <div class="revision-cue revision-cue-other"><span class="revision-readout-icon" aria-hidden="true">↗</span><span>Minimap-edge readout</span><strong>544<span>m</span></strong><small>A separate distance signal</small></div>
+            </div>
+            <div class="revision-mismatch"><span aria-hidden="true">≠</span><p>The diagnosis identifies two different subjects behind these distances.</p></div>
+            <div class="revision-observation-sequence"><span>Later edge readouts</span><div><b>522<small>m</small><em>Step 22</em></b><i aria-hidden="true">→</i><b>505<small>m</small><em>Step 23</em></b><i aria-hidden="true">→</i><b>518<small>m</small><em>Step 24</em></b></div></div>
+          </div>
+          <div class="revision-scene" data-revision-scene="1" hidden>
+            <div class="revision-scene-caption">A targeted change to the observation harness</div>
+            <div class="revision-bind-diagram">
+              <div class="revision-bind-input"><span class="revision-diamond" aria-hidden="true"></span><div><small>Locate</small><b>Gold-diamond candidate</b></div><span class="revision-mini-badge">Conditional</span></div>
+              <div class="revision-flow-wire" aria-hidden="true"><span></span></div>
+              <div class="revision-bind-pair"><div><small>Measure</small><b>Player-relative geometry</b><span>Direction and displacement</span></div><div><small>Cross-check</small><b>Background motion</b><span>Accepted registration</span></div></div>
+              <div class="revision-flow-wire" aria-hidden="true"><span></span></div>
+              <div class="revision-bind-output"><span aria-hidden="true">↳</span><div><small>Deliver to the planner</small><b>Feedback tied to the detected marker</b></div></div>
+            </div>
+            <p class="revision-visual-note">Ambiguous detections abstain. The detail image carries the detected outline.</p>
+          </div>
+          <div class="revision-scene" data-revision-scene="2" hidden>
+            <div class="revision-scene-caption">Offline action rubric <span>3 questions</span></div>
+            <div class="revision-score-head"><div><span>Mean score</span><strong>0.875<small>/ 1.000</small></strong></div><span class="revision-admitted">✓ Admitted</span></div>
+            <div class="revision-score-list">
+              <div><span>q-000</span><div class="revision-score-track" role="meter" aria-label="Question q-000 offline rubric score" aria-valuemin="0" aria-valuemax="1" aria-valuenow="1"><i class="revision-score-q0"></i></div><b>1.000</b></div>
+              <div><span>q-001</span><div class="revision-score-track" role="meter" aria-label="Question q-001 offline rubric score" aria-valuemin="0" aria-valuemax="1" aria-valuenow="1"><i class="revision-score-q1"></i></div><b>1.000</b></div>
+              <div><span>q-002</span><div class="revision-score-track" role="meter" aria-label="Question q-002 offline rubric score" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0.625"><i class="revision-score-q2"></i></div><b>0.625</b></div>
+            </div>
+            <div class="revision-gate-row"><span>Source review <b>Approved</b></span><span>Offline evaluation <b>Scored</b></span><span>Candidate archive <b>Admitted</b></span></div>
+          </div>
+          <div class="revision-scene" data-revision-scene="3" hidden>
+            <div class="revision-scene-caption">Selected harness by gameplay window</div>
+            <div class="revision-adoption-heading"><strong>4<span>seed windows</span></strong><span aria-hidden="true">→</span><strong>2<span>candidate windows</span></strong></div>
+            <div class="revision-window-grid" aria-label="Windows 1 through 4 use seed; windows 5 and 6 use candidate 000001">
+              <div><span>01</span><b>seed</b></div><div><span>02</span><b>seed</b></div><div><span>03</span><b>seed</b></div><div><span>04</span><b>seed</b></div><div class="revision-window-adopted"><span>05</span><b>revised</b></div><div class="revision-window-adopted"><span>06</span><b>revised</b></div>
+            </div>
+            <div class="revision-boundary"><span aria-hidden="true">↑</span><div><b>Window 4 → 5</b><p>The admitted candidate becomes available and is selected at the next boundary.</p></div></div>
+            <div class="revision-selection-record"><span>Selected version</span><code>candidate-000001</code><span class="revision-selected-check">✓ Windows 5 &amp; 6</span></div>
+          </div>
+        </div>
+        <div class="revision-narrative">
+          <p class="revision-eyebrow" id="revision-stage-label">01 / Diagnose</p><h4 id="revision-stage-title">Two readouts. One binding error.</h4><p id="revision-stage-body">The diagnosis traces repeated backtracking to a mismatch between the active quest marker and a separate minimap-edge distance.</p>
+          <ul id="revision-stage-evidence"></ul>
+          <details class="revision-evidence-details"><summary>Event details</summary><dl><div><dt>Event</dt><dd id="revision-event-name">external_diagnosis</dd></div><div><dt>Sequence</dt><dd id="revision-event-sequence">21</dd></div><div><dt>Elapsed time</dt><dd id="revision-event-elapsed">23:20</dd></div></dl></details>
+        </div>
+      </div>
+      <div class="revision-playback">
+        <div class="revision-playback-label"><span id="revision-view-count">Stage 1 of 4</span><span>Case replay</span></div>
+        <progress id="revision-replay-progress" max="100" value="0" aria-label="Case replay progress"></progress>
+        <div class="revision-playback-controls"><button type="button" id="revision-restart">↺ Restart</button><div><button type="button" id="revision-prev" aria-label="Previous revision stage" disabled>←</button><button type="button" id="revision-play" aria-pressed="false">▶ Play the case</button><button type="button" id="revision-next">Next stage →</button></div></div>
+      </div>
+      <p class="sr-only" id="revision-announcement" aria-live="polite" aria-atomic="true"></p>
+    </section>    </div>
+  </section>
+
+  <section class="section benchmark" id="benchmark" aria-labelledby="benchmark-title">
+    <div class="chapter-heading chapter-heading-bench"><div><div class="benchmark-section-heading"><div><p class="section-label">04 / Evaluation tasks</p><h2 id="benchmark-title">GamePilot Bench</h2></div></div></div><p class="section-intro">Explore tasks across four games. Compare instructions, watch the reference demonstration, and inspect the visible outcome.</p></div>
+    <div class="benchmark-examples-heading"><h3 id="benchmark-examples-title">Examples</h3><p class="benchmark-section-stats"><b id="bench-game-total">4</b> games <span>·</span> <b id="bench-total">39</b> examples</p></div>
+    <div class="bench-browser" id="bench-browser" role="region" aria-labelledby="benchmark-examples-title">
+      <div class="bench-toolbar">
+        <div class="bench-game-filters" role="group" aria-label="Filter by game"><button type="button" data-bench-game="all" aria-pressed="true">All games</button><button type="button" data-bench-game="Minecraft" aria-pressed="false">Minecraft</button><button type="button" data-bench-game="Wuthering Waves" aria-pressed="false">Wuthering Waves</button><button type="button" data-bench-game="Genshin Impact" aria-pressed="false">Genshin Impact</button><button type="button" data-bench-game="Honor of Kings: World" aria-pressed="false">Honor of Kings: World</button></div>
+        <div class="bench-search-row"><label class="bench-search"><span aria-hidden="true">⌕</span><input id="bench-search" type="search" placeholder="Find a task…" aria-label="Search benchmark tasks"></label><label class="bench-ability">Task type <select id="bench-ability"><option value="all">All types</option><option>Navigation</option><option>Interaction</option><option>Combat</option><option>Interface</option></select></label><span id="bench-count">39 examples</span><button type="button" class="bench-clear" id="bench-clear" hidden>Clear filters</button></div>
+      </div>
+      <div class="bench-layout">
+        <aside class="bench-library" aria-labelledby="bench-library-title"><div class="bench-library-heading"><h3 id="bench-library-title">Task library</h3><span>Reference demonstrations</span></div><label class="bench-mobile-picker" for="bench-task-select">Choose a task<select id="bench-task-select" aria-label="Choose a benchmark task"></select></label><div class="bench-task-list" id="bench-task-list" role="group" aria-label="Select a benchmark task"></div></aside>
+        <div class="bench-viewer" id="bench-viewer">
+          <header class="bench-viewer-heading"><div><p id="bench-task-meta">Minecraft <span aria-hidden="true">/</span> Interaction</p><h3 id="bench-task-title">Activate a Nether Portal</h3></div><span class="bench-reference-badge">Reference player</span></header>
+          <div class="bench-view-tabs" role="tablist" aria-label="Benchmark media view"><button type="button" role="tab" id="bench-tab-recording" data-bench-view="recording" aria-controls="bench-media" aria-selected="true">Recording</button><button type="button" role="tab" id="bench-tab-start" data-bench-view="start" aria-controls="bench-media" aria-selected="false" tabindex="-1">Start frame</button><button type="button" role="tab" id="bench-tab-outcome" data-bench-view="outcome" aria-controls="bench-media" aria-selected="false" tabindex="-1">Outcome</button><span id="bench-duration">4.95 s · 1× speed</span></div>
+          <div class="bench-media" id="bench-media" role="tabpanel" aria-labelledby="bench-tab-recording">
+            <video id="benchmark-video" src="assets/media/portal.mp4" poster="assets/images/portal.jpg" controls playsinline preload="none" aria-label="Activate a Nether Portal, reference-player recording">Your browser does not support inline video playback.</video>
+            <button type="button" class="bench-media-image demo-image-button" id="bench-image-button" data-demo-image="assets/images/portal.jpg" data-demo-title="Activate a Nether Portal · Start frame" aria-label="Enlarge the benchmark frame" hidden><img id="bench-frame" src="assets/images/portal.jpg" alt="Start frame for Activate a Nether Portal." loading="lazy"><span>Click to enlarge ↗</span></button>
+            <p id="bench-media-error" class="bench-media-error" role="status" hidden>The recording could not load. You can still inspect the start and outcome frames.</p>
+          </div>
+          <div class="bench-media-controls"><button type="button" id="bench-replay">↺ Replay clip</button><span id="bench-position">Example 1 of 39</span><div><button type="button" id="bench-prev" aria-label="Previous benchmark task" disabled>← Previous</button><button type="button" id="bench-next" aria-label="Next benchmark task">Next →</button></div></div>
+          <div class="bench-instruction-area"><div class="bench-instruction-heading"><h4 id="bench-instruction-title">Two ways to specify the same task</h4><span id="bench-instruction-subtitle">Shared completion criterion</span></div><div class="bench-instructions" id="bench-instructions">
+            <div class="bench-instruction atomic"><span>Atomic <small>Visual or procedural cues</small></span><p id="bench-atomic">Select the item in the leftmost hotbar slot and use it at the inside base of the dark rectangular frame until its interior becomes purple.</p></div>
+            <div class="bench-instruction basic" id="bench-basic-block"><span>Basic <small>Game-specific knowledge</small></span><p id="bench-basic">Activate the Nether Portal.</p></div>
+          </div><div class="bench-completion"><span aria-hidden="true">◎</span><div><b>Completion criterion</b><p id="bench-completion">The frame contains the active purple portal surface.</p></div><button type="button" id="bench-show-outcome">Inspect outcome ↗</button></div></div>
+        </div>
+        <div class="bench-empty" id="bench-empty" hidden><span aria-hidden="true">⌕</span><h3>No matching tasks</h3><p>Try another game, task type, or search term.</p><button type="button" id="bench-empty-clear">Show all examples</button></div>
+      </div>
+      <p class="sr-only" id="bench-announcement" aria-live="polite" aria-atomic="true"></p>
+      <noscript><p class="note">The Nether Portal example is shown above. Enable JavaScript to filter tasks and switch examples.</p></noscript>
+    </div>
+  </section>
+
+  <section class="section results" id="results" aria-labelledby="results-title">
+    <div class="chapter-heading"><div><p class="section-label">05 / Experiments</p>
+    <h2 id="results-title">Results</h2></div><p class="section-intro">One-hour Milestone campaigns with Gemini 3.6 Flash. Progress is the percentage of a chapter completed, weighted by human reference play time.</p></div>
+    <div class="results-tabs" role="tablist" aria-label="Reported experiment"><button role="tab" id="tab-main" aria-selected="true" aria-controls="results-panel" data-result="main">Main comparison</button><button role="tab" id="tab-scope" aria-selected="false" tabindex="-1" aria-controls="results-panel" data-result="scope">Optimization scope</button><button role="tab" id="tab-ablation" aria-selected="false" tabindex="-1" aria-controls="results-panel" data-result="ablation">Component ablations</button></div>
+    <div id="results-panel" role="tabpanel" aria-labelledby="tab-main" tabindex="0"><div class="table-scroll"><table id="results-table"><caption>Milestone progress (%)</caption><thead><tr><th scope="col">Framework</th><th scope="col">Minecraft</th><th scope="col">Wuthering<br>Waves</th><th scope="col">Honor of Kings:<br>World</th><th scope="col">Genshin<br>Impact</th></tr></thead><tbody><tr><th scope="row">Cradle</th><td>18.3</td><td>16.0</td><td>12.1</td><td>15.3</td></tr><tr><th scope="row">GV w/o VR</th><td>24.7</td><td>20.3</td><td>17.5</td><td>21.6</td></tr><tr><th scope="row">GV-Expert</th><td>27.9</td><td>23.8</td><td>20.4</td><td>25.2</td></tr><tr class="best"><th scope="row">GamePilot</th><td>51.6</td><td>45.3</td><td>40.8</td><td>47.2</td></tr></tbody></table></div><p class="table-note" id="result-note">Each entry is one campaign from a comparable chapter start. Progress is weighted by reference human play time.</p></div>
+    <p class="result-takeaway" id="result-takeaway">GamePilot reaches 1.85–2.00× the progress of GV-Expert, the strongest baseline in these campaigns.</p>
+  </section>
+  <section class="section citation" id="citation" aria-labelledby="citation-title">
+    <div class="chapter-heading"><div><p class="section-label">06 / Citation</p><h2 id="citation-title">Cite GamePilot</h2></div><p class="section-intro">Use the BibTeX entry below to cite our paper.</p></div>
+    <div class="citation-box">
+      <div class="citation-toolbar"><span id="citation-format">BibTeX</span><button type="button" id="copy-citation" aria-controls="citation-bibtex">Copy BibTeX</button></div>
+      <pre id="citation-bibtex" tabindex="0" aria-labelledby="citation-format"><code>@misc{zheng2026gamepilot,
+  title  = {{GamePilot}: A Game Agent That Learns How to Observe and Act from Its Own Play},
+  author = {Zheng, Yiming and Gu, Hanwen and Wang, Junle},
+  year   = {2026},
+  url    = {https://openreview.net/forum?id=IRHuEpKDcZ}
+}</code></pre>
+    </div>
+    <p id="citation-status" class="citation-status" role="status" aria-live="polite"></p>
+  </section>
+</main>
+<footer><p>GamePilot · Research Project</p><a href="#top">Back to top ↑</a></footer>
+<dialog class="figure-dialog" id="method-dialog" aria-labelledby="method-dialog-title"><div class="dialog-bar"><h2 id="method-dialog-title">GamePilot overview</h2><button id="close-method" aria-label="Close enlarged method figure">Close ×</button></div><div class="figure-viewport" tabindex="0" aria-label="Enlarged method figure, scroll to inspect"><img src="assets/images/method.png" width="3480" height="1890" alt="Enlarged GamePilot method figure from the paper."></div></dialog>
+<dialog class="demo-image-dialog" id="demo-image-dialog" aria-labelledby="demo-image-dialog-title">
+  <div class="dialog-bar"><h2 id="demo-image-dialog-title">Recorded observation</h2><button id="close-demo-image" aria-label="Close enlarged observation">Close ×</button></div>
+  <div class="demo-image-viewport"><img id="demo-image-expanded" alt=""></div>
+</dialog>
+<noscript><p class="noscript">Enable JavaScript to explore the interactive examples and switch between the results tables.</p></noscript>
+</body>
+</html>
